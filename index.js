@@ -1,16 +1,25 @@
 const express = require("express");
-const mysql = require("mysql");
+const mysql = require("mysql2");
 const bodyParser = require("body-parser");
 
 const app = express();
 const port = 3000;
 
 const db = mysql.createConnection({
-  host: "localhost",
+  host: "containers-us-west-31.railway.app",
   user: "root",
-  password: "root123",
-  database: "dbrevou",
+  password: "rfuq5wlu6NGuV16eg4tO",
+  database: "railway",
+  port: "5768",
 });
+
+// const db = mysql.createConnection({
+//   host: process.env.MYSQLHOST,
+//   user: process.env.MYSQLUER,
+//   password: process.env.MYSQLPASSWORD,
+//   database: process.env.MYSQLDATABASE,
+//   port: process.env.MYSQLPORT,
+// });
 
 db.connect((err) => {
   if (err) {
