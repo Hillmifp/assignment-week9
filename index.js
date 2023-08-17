@@ -13,14 +13,6 @@ const db = mysql.createConnection({
   port: "5768",
 });
 
-// const db = mysql.createConnection({
-//   host: process.env.MYSQLHOST,
-//   user: process.env.MYSQLUER,
-//   password: process.env.MYSQLPASSWORD,
-//   database: process.env.MYSQLDATABASE,
-//   port: process.env.MYSQLPORT,
-// });
-
 db.connect((err) => {
   if (err) {
     console.log(`Error Connecting to DB ${err}`);
@@ -34,7 +26,7 @@ app.use(bodyParser.json());
 app.get("/user/:userId", (req, res) => {
   const userId = req.params.userId;
 
-  db.query("SELECT * FROM userrevou WHERE id_user = ?", userId, (err, user) => {
+  db.query("SELECT * FROM tb_user WHERE id_user = ?", userId, (err, user) => {
     if (err) {
       console.error("Error retrieving user:", err);
       res.status(500).json({ error: "Error retrieving user" });
@@ -43,7 +35,7 @@ app.get("/user/:userId", (req, res) => {
         res.status(404).json({ error: "User not found" });
       } else {
         db.query(
-          "SELECT SUM(CASE WHEN transType = 'income' THEN amount ELSE 0 END) AS total_income, SUM(CASE WHEN transType = 'expense' THEN amount ELSE 0 END) AS total_expense FROM transrevou WHERE id_user = ?",
+          "SELECT SUM(CASE WHEN transType = 'income' THEN amount ELSE 0 END) AS total_income, SUM(CASE WHEN transType = 'expense' THEN amount ELSE 0 END) AS total_expense FROM tb_transaction WHERE id_user = ?",
           userId,
           (err, result) => {
             if (err) {
@@ -69,11 +61,28 @@ app.get("/user/:userId", (req, res) => {
   });
 });
 
+app.post("/user", (req, res) => {
+  const { name, address } = req.body;
+
+  db.query(
+    "INSERT INTO tb_user (name, address) VALUES (?, ?)",
+    [name, address],
+    (err, result) => {
+      if (err) {
+        console.error("Error adding user:", err);
+        res.status(500).json({ error: "Error adding user" });
+      } else {
+        res.json({ id: result.insertId, message: "User added successfully" });
+      }
+    }
+  );
+});
+
 app.post("/transaction", (req, res) => {
   const { user_id, transType, amount } = req.body;
 
   db.query(
-    "INSERT INTO transrevou (id_user, transType, amount) VALUES (?, ?, ?)",
+    "INSERT INTO tb_trans (id_user, transType, amount) VALUES (?, ?, ?)",
     [user_id, transType, amount],
     (err, result) => {
       if (err) {
@@ -94,7 +103,7 @@ app.put("/transaction/:transId", (req, res) => {
   const { user_id, transType, amount } = req.body;
 
   db.query(
-    "UPDATE transrevou SET id_user = ?, transType = ?, amount = ? WHERE id_trans = ?",
+    "UPDATE tb_trans SET id_user = ?, transType = ?, amount = ? WHERE id_trans = ?",
     [user_id, transType, amount, transId],
     (err, result) => {
       if (err) {
@@ -111,7 +120,7 @@ app.delete("/transaction/:transId", (req, res) => {
   const transId = req.params.transId;
 
   db.query(
-    "DELETE FROM transrevou WHERE id_trans = ?",
+    "DELETE FROM tb_trans WHERE id_trans = ?",
     transId,
     (err, result) => {
       if (err) {
